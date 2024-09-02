@@ -1,4 +1,4 @@
-
+// Reference : https://wokwi.com/projects/407522602097184769
 #include <LiquidCrystal_I2C.h>      // memasukan library I2C
 /***
   setelah library lcd I2C dipanggil/dimasukkan ke kode
