@@ -1,0 +1,168 @@
+
+#include <LiquidCrystal_I2C.h>      // memasukan library I2C
+/***
+  setelah library lcd I2C dipanggil/dimasukkan ke kode
+  dengan perintah #include <LiquidCrystal_I2C.h>
+
+  kemudian kita membuat objek degan cara memanggil salah satu perintah (sintaks) dari library
+  yaitu menggunakan : LiquidCrystal_I2C nama_objek(alamat I2c, kolom, baris);
+
+  pada kode ini kita menggunakan LiquidCrystal_I2C lcd (0x27, 16, 2);
+***/
+LiquidCrystal_I2C lcd (0x27, 16,2); // membuat objek baru
+
+/*
+  Koneksi pada sketch ini adalah :
+  Komponen              Arduino
+  VCC LCD I2C           ->  5V
+  VCC Ultrasonik        ->  5V
+  GND LCD I2C           ->  GND
+  GND Ultrasonik        ->  GND
+  Cathode(C) LED Merah  ->  GND
+  Cathode(C) LED Kuning ->  GND
+  Cathode(C) LED Hijau  ->  GND
+  Kable Hitam(-) Buzzer ->  GND
+  Trig Ultrasonik       ->  8
+  Echo Ultrasonik       ->  7
+  Anoda(A) LED Merah    ->  12
+  Anoda(A) LED Kuning   ->  11
+  Anoda(A) LED Hijau    ->  10
+  Kable Merah(+) Buzzer ->  9
+*/
+// deklarasi variabel global
+#define trigPin 8   // set pin Trig pada pin 8 Arduino
+#define echoPin 7   // set pin Echo pada pin 7 Arduino
+#define ledR 12     // set pin Led Merah pada pin 12 Arduino
+#define ledY 11     // set pin Led Kuning pada pin 11 Arduino
+#define ledG 10     // set pin Led Hijau pada pin 10 Arduino
+#define Buzzer 9    // set pin positif Buzzer pada pin 9 Arduino
+
+/*
+  Membuat fungsi tipe "float" yang mengembalikan nila berupa float atau desimal
+  Nama dari fungsi ini adalah mengukur_jarak
+  Variabel global yang dipakai trigPin dan echoPin
+  Variabel lokal duration dan distance (variabel lokal hanya khusus untuk fungsi ini saja)
+*/
+float mengukur_jarak(){
+  digitalWrite(trigPin, HIGH);              // memerintahkan trigPin menyala (memancarkan sinyal)
+  delayMicroseconds(10);                    // berhenti selama 10 microsecond
+  digitalWrite(trigPin, LOW);               // memerintahkan trigPin mati 
+  // variabel tipe "long" bernama durasi yang nilainya sama dengan waktu pemancaran sinyal 
+  // hingga sinyal diterima oleh echoPin
+  long duration = pulseIn(echoPin,HIGH);
+  // variabel tipe "float" bernama distance yang nilainya sama dengan nilai duration dibagi 58.0
+  // variabel ini adalah jarak yang diukur oleh sensor ultrasonik
+  float distance = duration/58.0;
+  // return adalah fungsi untuk mengembalikan nilai dari suatu fungsi 
+  // jika tidak memakai return maka fungsi hanya akan bernilai 0
+  // dalam fungsi ini return mengembalikan nilai dari variabel distance
+  return distance;
+}
+
+/*
+  membuat fungsi tipe "void" yang tidak mengembalikan apa-apa
+  fungsi bernama kondisi_aman
+  variabel yang dipakai ledG
+*/
+void kondisi_aman(){
+  digitalWrite(ledG, HIGH);   // lampu hijau nyala
+}
+
+/*
+  membuat fungsi tipe "void" yang tidak mengembalikan apa-apa
+  fungsi bernama kondisi_hati
+  variabel yang dipakai ledY
+*/
+void kondisi_hati(){
+  digitalWrite(ledY, HIGH);   // lampu kuning nyala
+  delay(500);                 // berhenti 0.5 detik
+  digitalWrite(ledY, LOW);    // lampu kuning mati
+  delay(500);                 // berhenti setengah detik
+}
+
+/*
+  membuat fungsi tipe "void" yang tidak mengembalikan apa-apa
+  fungsi bernama kondisi_bahaya
+  variabel yang dipakai ledR dan Buzzer
+*/
+void kondisi_bahaya(){
+  digitalWrite(ledR, HIGH);       // menyalakan lampu merah
+  digitalWrite(Buzzer, HIGH);     // menyalakan buzzer(piezo)
+  delay(500);                     // berhenti 0.5 detik
+  digitalWrite(ledR, LOW);        // mematikan lampu merah
+  digitalWrite(Buzzer, LOW);      // mematikan buzzer(piezo)
+  delay(200);                     // berhenti 0.2 detik  
+}
+
+/*
+  fungsi utama yang harus ada void setup.
+  variabel yang dipakai pada void setup yaitu : 
+  trigPin, echoPin, ledR, ledY, ledG, Buzzer
+  objek yang dipakai lcd
+  karena void setup hanya sekali dijalankan maka setting mode 
+  dan menyalakan komponen cocok dilakukan pada void setup
+*/
+
+void setup() {
+  // deklarasi mode pin yang digunakan 
+  pinMode(trigPin, OUTPUT);       // setting trigPin sebagai output
+  pinMode(echoPin, INPUT);        // setting echoPin sebagai input
+  pinMode(ledR, OUTPUT);          // setting ledR  sebagai ouput
+  pinMode(ledY, OUTPUT);          // setting ledY  sebagai ouput
+  pinMode(ledG, OUTPUT);          // setting ledG  sebagai ouput
+  pinMode(Buzzer, OUTPUT);        // setting Buzzer sebagai output
+
+  // memulai lcd dengan fungsi bawaan library I2C
+  lcd.init();
+  lcd.backlight(); // setting lampu lcd agar menyala
+
+  digitalWrite(trigPin, LOW);     // memerintahkan trigPin mati
+  delayMicroseconds(2);           // berhenti selama 2 mikro detik
+
+}
+/*
+    Fungsi utama yang akan dijalankan terus menerus
+*/
+void loop() {
+  lcd.clear();                    // menghapus semua karakter lcd
+  digitalWrite(ledR, LOW);        // memerintahkan ledR mati
+  digitalWrite(ledY, LOW);        // memerintahkan ledY mati
+  digitalWrite(ledG, LOW);        // memerintahkan ledG mati
+  digitalWrite(Buzzer, LOW);      // memerintahkan Buzzer mati
+
+  // membuat variabel bertipe "float" dengan nama jarak_terukur yang nilainya sama dengan 
+  // kembalian dari fungsi mengukur_jarak()
+  float jarak_terukur = mengukur_jarak();
+  // fungsi if, jika jarak terukur lebih dari 100 cm maka fungsi if ini akan dijalankan
+  if (jarak_terukur >= 100){
+      lcd.setCursor(0,0);         // setting kursor pada kolom pertama dan baris pertama
+      lcd.print("Jarak Aman");    // memerintahkan lcd menulis "Jarak Aman"
+      kondisi_aman();             // memanggil fungsi kondisi_aman();
+  } 
+
+  // fungsi else if, akan dijalankan jika jarak terukur kurang dari 100 cm
+  // dan jarak terukurnya lebih dari 50 cm. karena menggunakan "&&" maka kedua kondisi harus terpenuhi
+  // agar fungsi else if dijalankan 
+  else if (jarak_terukur < 100 && jarak_terukur >= 50){
+      lcd.setCursor(0,0);         // setting kursor pada kolom pertama dan baris pertama
+      lcd.print("Jarak: ");       // memerintahkan lcd menulis "Jarak: "
+      lcd.print(jarak_terukur);   // memerintahkan lcd menulis nilai dari jarak terukur
+      lcd.print(" cm");           // memerintahkan lcd menulis " cm"
+      lcd.setCursor(0,1);         // setting kursor pada kolom pertama dan baris kedua
+      lcd.print("Hati-Hati");     // memerintahkan lcd menulis "Hati-Hati"
+      kondisi_hati();             // memanggil fungsi kondisi_hati()
+  }
+  // fungsi else adalah fungsi kondisi dimana kode didalamnya akan dijalankan
+  // ketika fungsi if dan else if tidak ada yang memenuhi kondisi
+  else{
+      lcd.setCursor(0,0);         // setting kursor pada kolom pertama dan baris pertama
+      lcd.print("Jarak: ");       // memerintahkan lcd menulis "Jarak: "
+      lcd.print(jarak_terukur);   // memerintahkan lcd menulis nilai dari jarak terukur
+      lcd.print(" cm");           // memerintahkan lcd menulis " cm"
+      lcd.setCursor(0,1);         // setting kursor pada kolom pertama dan baris kedua
+      lcd.print("BAHAYA");        // memerintahkan lcd menulis "BAHAYA"
+      kondisi_bahaya();           // memanggil fungsi kondisi_bahaya()
+  }
+  delay(500);                     // berhenti setengah detik
+}
+
